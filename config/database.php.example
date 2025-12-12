@@ -1,33 +1,28 @@
 <?php
 /**
- * Database Configuration Template
+ * Database Configuration Template (MongoDB)
  * 
  * Copy this file to database.php and update with your database credentials
  * This file is used by the installer to generate database.php
  */
 
-// Database configuration
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'property_management');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_CHARSET', 'utf8mb4');
+// MongoDB configuration
+// For local: mongodb://localhost:27017
+// For Atlas: mongodb+srv://username:password@cluster.mongodb.net/
+define('MONGODB_URI', 'mongodb://localhost:27017');
+define('MONGODB_DB', 'property_management');
 
 // Database connection
 function getDBConnection() {
     try {
-        $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
-        $options = [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES   => false,
-        ];
+        require_once __DIR__ . '/../vendor/autoload.php';
         
-        $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
-        return $pdo;
-    } catch (PDOException $e) {
-        error_log("Database connection failed: " . $e->getMessage());
+        $client = new MongoDB\Client(MONGODB_URI);
+        $db = $client->selectDatabase(MONGODB_DB);
+        
+        return $db;
+    } catch (Exception $e) {
+        error_log("MongoDB connection failed: " . $e->getMessage());
         return null;
     }
 }
-

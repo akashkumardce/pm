@@ -1,51 +1,5 @@
--- Property Management System Database Schema
-
--- Users table
-CREATE TABLE IF NOT EXISTS `users` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `email` varchar(255) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `first_name` varchar(100) NOT NULL,
-  `last_name` varchar(100) NOT NULL,
-  `phone` varchar(20) DEFAULT NULL,
-  `status` enum('active','inactive','suspended') DEFAULT 'active',
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Roles table
-CREATE TABLE IF NOT EXISTS `roles` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  `slug` varchar(50) NOT NULL,
-  `description` text DEFAULT NULL,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `slug` (`slug`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- User roles junction table (many-to-many)
-CREATE TABLE IF NOT EXISTS `user_roles` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
-  `role_id` int(11) NOT NULL,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `user_role` (`user_id`,`role_id`),
-  KEY `user_id` (`user_id`),
-  KEY `role_id` (`role_id`),
-  CONSTRAINT `user_roles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `user_roles_ibfk_2` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Insert default roles
-INSERT INTO `roles` (`name`, `slug`, `description`) VALUES
-('Property Owner', 'property_owner', 'User who owns properties'),
-('Tenant', 'tenant', 'User who rents properties'),
-('Property Manager', 'property_manager', 'User who manages properties'),
-('Admin', 'admin', 'System administrator');
+-- Migration: Add Property Management Tables
+-- Run this if you already have the base schema installed
 
 -- Property types table
 CREATE TABLE IF NOT EXISTS `property_types` (
@@ -60,14 +14,17 @@ CREATE TABLE IF NOT EXISTS `property_types` (
   UNIQUE KEY `slug` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Insert default property types
-INSERT INTO `property_types` (`name`, `slug`, `description`, `has_rooms`, `has_floors`) VALUES
-('Land', 'land', 'Empty land or plot', 0, 0),
-('Home', 'home', 'Residential home', 0, 0),
-('PG (Paying Guest)', 'pg', 'Paying Guest accommodation', 1, 1),
-('Villa', 'villa', 'Luxury villa', 0, 1),
-('Flat/Apartment', 'flat', 'Apartment or flat', 0, 1),
-('Commercial', 'commercial', 'Commercial property', 0, 0);
+-- Insert default property types (only if table is empty)
+INSERT INTO `property_types` (`name`, `slug`, `description`, `has_rooms`, `has_floors`)
+SELECT * FROM (
+    SELECT 'Land' as name, 'land' as slug, 'Empty land or plot' as description, 0 as has_rooms, 0 as has_floors
+    UNION ALL SELECT 'Home', 'home', 'Residential home', 0, 0
+    UNION ALL SELECT 'PG (Paying Guest)', 'pg', 'Paying Guest accommodation', 1, 1
+    UNION ALL SELECT 'Villa', 'villa', 'Luxury villa', 0, 1
+    UNION ALL SELECT 'Flat/Apartment', 'flat', 'Apartment or flat', 0, 1
+    UNION ALL SELECT 'Commercial', 'commercial', 'Commercial property', 0, 0
+) AS tmp
+WHERE NOT EXISTS (SELECT 1 FROM `property_types`);
 
 -- Properties table
 CREATE TABLE IF NOT EXISTS `properties` (
@@ -89,7 +46,7 @@ CREATE TABLE IF NOT EXISTS `properties` (
   CONSTRAINT `properties_ibfk_2` FOREIGN KEY (`property_type_id`) REFERENCES `property_types` (`id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Property details table (for additional property information)
+-- Property details table
 CREATE TABLE IF NOT EXISTS `property_details` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `property_id` int(11) NOT NULL,
@@ -103,7 +60,7 @@ CREATE TABLE IF NOT EXISTS `property_details` (
   CONSTRAINT `property_details_ibfk_1` FOREIGN KEY (`property_id`) REFERENCES `properties` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Floors table (for properties with floors like PG, Villa, Flat)
+-- Floors table
 CREATE TABLE IF NOT EXISTS `floors` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `property_id` int(11) NOT NULL,
@@ -118,7 +75,7 @@ CREATE TABLE IF NOT EXISTS `floors` (
   CONSTRAINT `floors_ibfk_1` FOREIGN KEY (`property_id`) REFERENCES `properties` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Rooms table (for PG properties)
+-- Rooms table
 CREATE TABLE IF NOT EXISTS `rooms` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `property_id` int(11) NOT NULL,
@@ -139,7 +96,7 @@ CREATE TABLE IF NOT EXISTS `rooms` (
   CONSTRAINT `rooms_ibfk_2` FOREIGN KEY (`floor_id`) REFERENCES `floors` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Renters table (for all property types)
+-- Renters table
 CREATE TABLE IF NOT EXISTS `renters` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `property_id` int(11) NOT NULL,
@@ -167,7 +124,7 @@ CREATE TABLE IF NOT EXISTS `renters` (
   CONSTRAINT `renters_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Notifications table (for sending custom notifications to renters)
+-- Notifications table
 CREATE TABLE IF NOT EXISTS `notifications` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `renter_id` int(11) NOT NULL,

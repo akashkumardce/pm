@@ -35,11 +35,10 @@ if (empty($email) || empty($password)) {
 }
 
 try {
+    require_once __DIR__ . '/../../includes/mongodb.php';
+    
     // Get user by email
-    $user = dbFetchOne(
-        "SELECT id, email, password, first_name, last_name, phone, status FROM users WHERE email = ?",
-        [$email]
-    );
+    $user = MongoDBHelper::findOne('users', ['email' => $email]);
     
     if (!$user) {
         http_response_code(401);
@@ -48,7 +47,7 @@ try {
     }
     
     // Check if user is active
-    if ($user['status'] !== 'active') {
+    if (($user['status'] ?? 'active') !== 'active') {
         http_response_code(403);
         echo json_encode(['success' => false, 'message' => 'Account is not active']);
         exit;
@@ -61,19 +60,29 @@ try {
         exit;
     }
     
+    // Convert _id to string for session
+    $userId = (string)$user['_id'];
+    
     // Login user
-    loginUser($user['id']);
+    loginUser($userId);
     
     // Get user roles
-    $roles = getUserRoles($user['id']);
+    $roles = getUserRoles($userId);
     
-    // Remove password from response
-    unset($user['password']);
+    // Prepare user data for response
+    $userData = [
+        'id' => $userId,
+        'email' => $user['email'],
+        'first_name' => $user['first_name'],
+        'last_name' => $user['last_name'],
+        'phone' => $user['phone'] ?? null,
+        'status' => $user['status'] ?? 'active'
+    ];
     
     echo json_encode([
         'success' => true,
         'message' => 'Login successful',
-        'user' => $user,
+        'user' => $userData,
         'roles' => $roles
     ]);
     

@@ -1,39 +1,36 @@
 # Apache Configuration for Property Management System
 
+# Disable directory listing
+Options -Indexes
+
 # Enable Rewrite Engine
 RewriteEngine On
 
-# Redirect to public directory
-RewriteCond %{REQUEST_URI} !^/public/
-RewriteCond %{REQUEST_URI} !^/install/
-RewriteCond %{REQUEST_URI} !^/api/
-RewriteCond %{REQUEST_URI} !^/assets/
-RewriteCond %{REQUEST_URI} !^/config/
-RewriteCond %{REQUEST_URI} !^/database/
-RewriteCond %{REQUEST_URI} !^/includes/
-RewriteRule ^(.*)$ /public/$1 [L]
+# Set base path for subdirectory installations
+RewriteBase /pm/
 
-# API Routes
-RewriteCond %{REQUEST_URI} ^/api/
-RewriteRule ^api/(.*)$ /api/$1 [L]
+# Don't rewrite if the actual file exists (but allow directories to be rewritten)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
 
-# Install Routes
-RewriteCond %{REQUEST_URI} ^/install/
-RewriteRule ^install/(.*)$ /install/$1 [L]
+# Don't rewrite install, api, config, database, includes, assets directories
+RewriteCond %{REQUEST_URI} ^/pm/(install|api|config|database|includes|assets)/
+RewriteRule ^ - [L]
+
+# If accessing root (/pm/), serve public/index.php
+RewriteCond %{REQUEST_URI} ^/pm/?$
+RewriteRule ^$ public/index.php [L]
+
+# Redirect everything else to public directory (but not if already in public)
+RewriteCond %{REQUEST_URI} !^/pm/public/
+RewriteCond %{REQUEST_URI} ^/pm/
+RewriteRule ^(.*)$ public/$1 [L]
 
 # Security: Prevent direct access to config files
 <FilesMatch "^(config|includes|database)">
     Order allow,deny
     Deny from all
 </FilesMatch>
-
-# Security: Prevent access to .php files in config and includes directories
-<DirectoryMatch "^.*/(config|includes|database)">
-    <FilesMatch "\.php$">
-        Order allow,deny
-        Deny from all
-    </FilesMatch>
-</DirectoryMatch>
 
 # Set default index file
 DirectoryIndex index.php index.html

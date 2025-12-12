@@ -12,7 +12,7 @@ requireInstallation();
 
 // Redirect if already logged in
 if (isLoggedIn()) {
-    header('Location: /');
+    header('Location: ' . BASE_URL);
     exit;
 }
 ?>
@@ -98,7 +98,7 @@ if (isLoggedIn()) {
                 </button>
                 
                 <div class="text-center">
-                    <a href="/login.php">Already have an account? Login</a>
+                    <a href="<?php echo BASE_URL; ?>login.php">Already have an account? Login</a>
                 </div>
             </form>
         </div>
@@ -111,7 +111,7 @@ if (isLoggedIn()) {
         // Load available roles
         async function loadRoles() {
             try {
-                const response = await fetch('/api/roles/list.php');
+                const response = await fetch('<?php echo BASE_URL; ?>api/roles/list.php');
                 const data = await response.json();
                 if (data.success) {
                     availableRoles = data.roles;
@@ -175,7 +175,7 @@ if (isLoggedIn()) {
             };
             
             try {
-                const response = await fetch('/api/auth/register.php', {
+                const response = await fetch('<?php echo BASE_URL; ?>api/auth/register.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -188,7 +188,7 @@ if (isLoggedIn()) {
                 if (result.success) {
                     showAlert('Registration successful! Redirecting to login...', 'success');
                     setTimeout(() => {
-                        window.location.href = '/login.php';
+                        window.location.href = '<?php echo BASE_URL; ?>login.php';
                     }, 2000);
                 } else {
                     const errorMsg = result.errors ? result.errors.join('<br>') : result.message;

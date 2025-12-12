@@ -34,10 +34,19 @@ function getCurrentUser() {
         return null;
     }
     
-    $user = dbFetchOne(
-        "SELECT id, email, first_name, last_name, phone, created_at FROM users WHERE id = ?",
-        [$_SESSION['user_id']]
-    );
+    require_once __DIR__ . '/mongodb.php';
+    $userId = MongoDBHelper::toObjectId($_SESSION['user_id']);
+    if (!$userId) {
+        return null;
+    }
+    
+    $user = MongoDBHelper::findOne('users', ['_id' => $userId]);
+    
+    if ($user) {
+        // Convert _id to id for backward compatibility
+        $user['id'] = $user['_id'];
+        unset($user['password']); // Don't return password
+    }
     
     return $user;
 }
@@ -46,12 +55,33 @@ function getCurrentUser() {
  * Get user roles
  */
 function getUserRoles($userId) {
-    return dbFetchAll(
-        "SELECT r.id, r.name, r.slug FROM roles r 
-         INNER JOIN user_roles ur ON r.id = ur.role_id 
-         WHERE ur.user_id = ?",
-        [$userId]
-    );
+    require_once __DIR__ . '/mongodb.php';
+    $userIdObj = MongoDBHelper::toObjectId($userId);
+    if (!$userIdObj) {
+        return [];
+    }
+    
+    // Get user role IDs
+    $userRoles = MongoDBHelper::find('user_roles', ['user_id' => $userIdObj]);
+    
+    if (empty($userRoles)) {
+        return [];
+    }
+    
+    // Get role IDs
+    $roleIds = array_map(function($ur) {
+        return MongoDBHelper::toObjectId($ur['role_id']);
+    }, $userRoles);
+    
+    // Get roles
+    $roles = MongoDBHelper::find('roles', ['_id' => ['$in' => $roleIds]]);
+    
+    // Convert _id to id for backward compatibility
+    foreach ($roles as &$role) {
+        $role['id'] = $role['_id'];
+    }
+    
+    return $roles;
 }
 
 /**

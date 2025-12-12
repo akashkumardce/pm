@@ -17,7 +17,15 @@ if (!isInstalled()) {
 require_once __DIR__ . '/../../includes/database.php';
 
 try {
-    $roles = dbFetchAll("SELECT id, name, slug, description FROM roles ORDER BY name");
+    require_once __DIR__ . '/../../includes/mongodb.php';
+    
+    $roles = MongoDBHelper::find('roles', [], ['sort' => ['name' => 1]]);
+    
+    // Convert _id to id for backward compatibility
+    foreach ($roles as &$role) {
+        $role['id'] = (string)$role['_id'];
+        unset($role['_id']);
+    }
     
     echo json_encode([
         'success' => true,
@@ -25,6 +33,6 @@ try {
     ]);
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Failed to fetch roles']);
+    echo json_encode(['success' => false, 'message' => 'Failed to fetch roles: ' . $e->getMessage()]);
 }
 

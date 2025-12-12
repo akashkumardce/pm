@@ -12,7 +12,7 @@ requireInstallation();
 
 // Require login
 if (!isLoggedIn()) {
-    header('Location: /login.php');
+    header('Location: ' . BASE_URL . 'login.php');
     exit;
 }
 
@@ -45,7 +45,7 @@ $userRoles = getUserRoles($_SESSION['user_id']);
 <body>
     <nav class="navbar navbar-expand-lg navbar-light mb-4">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/">
+            <a class="navbar-brand fw-bold" href="<?php echo BASE_URL; ?>">
                 <i class="bi bi-building"></i> <?php echo APP_NAME; ?>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -54,7 +54,13 @@ $userRoles = getUserRoles($_SESSION['user_id']);
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="/dashboard.php">Dashboard</a>
+                        <a class="nav-link active" href="<?php echo BASE_URL; ?>dashboard.php">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo BASE_URL; ?>properties.php">Properties</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo BASE_URL; ?>renters.php">Renters</a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
@@ -93,9 +99,39 @@ $userRoles = getUserRoles($_SESSION['user_id']);
                     </div>
                 </div>
                 
-                <div class="card p-4">
-                    <h4 class="mb-3">Quick Actions</h4>
-                    <p class="text-muted">Dashboard features will be available soon. This is the basic structure with registration and login flow.</p>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card p-4 h-100">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                                    <i class="bi bi-building text-primary" style="font-size: 2rem;"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0">Properties</h5>
+                                    <p class="text-muted small mb-0">Manage your properties</p>
+                                </div>
+                            </div>
+                            <a href="<?php echo BASE_URL; ?>properties.php" class="btn btn-primary w-100">
+                                <i class="bi bi-arrow-right"></i> View Properties
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card p-4 h-100">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                                    <i class="bi bi-people text-success" style="font-size: 2rem;"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0">Renters</h5>
+                                    <p class="text-muted small mb-0">Manage renters & tenants</p>
+                                </div>
+                            </div>
+                            <a href="<?php echo BASE_URL; ?>renters.php" class="btn btn-success w-100">
+                                <i class="bi bi-arrow-right"></i> View Renters
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -105,7 +141,7 @@ $userRoles = getUserRoles($_SESSION['user_id']);
     <script>
         async function logout() {
             try {
-                const response = await fetch('/api/auth/logout.php', {
+                const response = await fetch('<?php echo BASE_URL; ?>api/auth/logout.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -113,7 +149,7 @@ $userRoles = getUserRoles($_SESSION['user_id']);
                 });
                 const data = await response.json();
                 if (data.success) {
-                    window.location.href = '/';
+                    window.location.href = '<?php echo BASE_URL; ?>';
                 }
             } catch (error) {
                 console.error('Logout error:', error);

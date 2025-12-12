@@ -61,7 +61,7 @@ if ($isLoggedIn) {
 <body>
     <nav class="navbar navbar-expand-lg navbar-light">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/">
+            <a class="navbar-brand fw-bold" href="<?php echo BASE_URL; ?>">
                 <i class="bi bi-building"></i> <?php echo APP_NAME; ?>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -75,17 +75,17 @@ if ($isLoggedIn) {
                                 <i class="bi bi-person-circle"></i> <?php echo htmlspecialchars($currentUser['first_name']); ?>
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="/dashboard.php">Dashboard</a></li>
+                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>dashboard.php">Dashboard</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="#" onclick="logout()">Logout</a></li>
                             </ul>
                         </li>
                     <?php else: ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="/login.php">Login</a>
+                            <a class="nav-link" href="<?php echo BASE_URL; ?>login.php">Login</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/register.php">Register</a>
+                            <a class="nav-link" href="<?php echo BASE_URL; ?>register.php">Register</a>
                         </li>
                     <?php endif; ?>
                 </ul>
@@ -98,10 +98,10 @@ if ($isLoggedIn) {
         <div class="container">
             <h1 class="display-4 fw-bold mb-4">Property Management Made Easy</h1>
             <p class="lead mb-5">Manage your properties, tenants, and more with our comprehensive platform</p>
-            <a href="/register.php" class="btn btn-primary btn-lg me-2">
+            <a href="<?php echo BASE_URL; ?>register.php" class="btn btn-primary btn-lg me-2">
                 <i class="bi bi-person-plus"></i> Get Started
             </a>
-            <a href="/login.php" class="btn btn-outline-light btn-lg">
+            <a href="<?php echo BASE_URL; ?>login.php" class="btn btn-outline-light btn-lg">
                 <i class="bi bi-box-arrow-in-right"></i> Login
             </a>
         </div>
@@ -147,7 +147,7 @@ if ($isLoggedIn) {
                             <?php endforeach; ?>
                         </div>
                     </div>
-                    <a href="/dashboard.php" class="btn btn-primary">
+                    <a href="<?php echo BASE_URL; ?>dashboard.php" class="btn btn-primary">
                         <i class="bi bi-speedometer2"></i> Go to Dashboard
                     </a>
                 </div>
@@ -160,7 +160,7 @@ if ($isLoggedIn) {
     <script>
         async function logout() {
             try {
-                const response = await fetch('/api/auth/logout.php', {
+                const response = await fetch('<?php echo BASE_URL; ?>api/auth/logout.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -168,7 +168,7 @@ if ($isLoggedIn) {
                 });
                 const data = await response.json();
                 if (data.success) {
-                    window.location.href = '/';
+                    window.location.href = '<?php echo BASE_URL; ?>';
                 }
             } catch (error) {
                 console.error('Logout error:', error);

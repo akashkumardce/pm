@@ -12,7 +12,7 @@ requireInstallation();
 
 // Redirect if already logged in
 if (isLoggedIn()) {
-    header('Location: /');
+    header('Location: ' . BASE_URL);
     exit;
 }
 ?>
@@ -67,7 +67,7 @@ if (isLoggedIn()) {
                 </button>
                 
                 <div class="text-center">
-                    <a href="/register.php">Don't have an account? Register</a>
+                    <a href="<?php echo BASE_URL; ?>register.php">Don't have an account? Register</a>
                 </div>
             </form>
         </div>
@@ -95,7 +95,7 @@ if (isLoggedIn()) {
             };
             
             try {
-                const response = await fetch('/api/auth/login.php', {
+                const response = await fetch('<?php echo BASE_URL; ?>api/auth/login.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -108,7 +108,7 @@ if (isLoggedIn()) {
                 if (result.success) {
                     showAlert('Login successful! Redirecting...', 'success');
                     setTimeout(() => {
-                        window.location.href = '/';
+                        window.location.href = '<?php echo BASE_URL; ?>';
                     }, 1000);
                 } else {
                     showAlert(result.message || 'Login failed');

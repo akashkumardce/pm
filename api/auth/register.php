@@ -60,13 +60,10 @@ if (!empty($errors)) {
 }
 
 try {
-    $db = getDB();
-    if (!$db) {
-        throw new Exception('Database connection failed');
-    }
+    require_once __DIR__ . '/../../includes/mongodb.php';
     
     // Check if email already exists
-    $existing = dbFetchOne("SELECT id FROM users WHERE email = ?", [$email]);
+    $existing = MongoDBHelper::findOne('users', ['email' => $email]);
     if ($existing) {
         http_response_code(409);
         echo json_encode(['success' => false, 'message' => 'Email already registered']);
@@ -77,10 +74,16 @@ try {
     $hashedPassword = hashPassword($password);
     
     // Insert user
-    $userId = dbInsert(
-        "INSERT INTO users (email, password, first_name, last_name, phone) VALUES (?, ?, ?, ?, ?)",
-        [$email, $hashedPassword, $firstName, $lastName, $phone]
-    );
+    $userDocument = [
+        'email' => $email,
+        'password' => $hashedPassword,
+        'first_name' => $firstName,
+        'last_name' => $lastName,
+        'phone' => $phone ?: null,
+        'status' => 'active'
+    ];
+    
+    $userId = MongoDBHelper::insertOne('users', $userDocument);
     
     if (!$userId) {
         throw new Exception('Failed to create user');
@@ -89,23 +92,25 @@ try {
     // Assign roles
     if (!empty($roles) && is_array($roles)) {
         foreach ($roles as $roleSlug) {
-            $role = dbFetchOne("SELECT id FROM roles WHERE slug = ?", [$roleSlug]);
+            $role = MongoDBHelper::findOne('roles', ['slug' => $roleSlug]);
             if ($role) {
-                dbInsert(
-                    "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)",
-                    [$userId, $role['id']]
-                );
+                MongoDBHelper::insertOne('user_roles', [
+                    'user_id' => $userId,
+                    'role_id' => MongoDBHelper::toObjectId($role['_id'])
+                ]);
             }
         }
     }
     
     // Get user data
-    $user = dbFetchOne(
-        "SELECT id, email, first_name, last_name, phone, created_at FROM users WHERE id = ?",
-        [$userId]
-    );
+    $user = MongoDBHelper::findOne('users', ['_id' => $userId]);
+    if ($user) {
+        $user['id'] = (string)$user['_id'];
+        unset($user['password']);
+        unset($user['_id']);
+    }
     
-    $userRoles = getUserRoles($userId);
+    $userRoles = getUserRoles((string)$userId);
     
     echo json_encode([
         'success' => true,

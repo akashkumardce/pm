@@ -1,10 +1,11 @@
 <?php
 /**
- * Database Helper Functions
+ * Database Helper Functions (MongoDB)
  */
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/mongodb.php';
 
 /**
  * Get database connection
@@ -14,62 +15,31 @@ function getDB() {
 }
 
 /**
- * Execute a query and return results
+ * Execute a query and return results (MongoDB compatible)
+ * @deprecated Use MongoDBHelper methods directly
  */
-function dbQuery($sql, $params = []) {
-    try {
-        $db = getDB();
-        if (!$db) {
-            return false;
-        }
-        
-        $stmt = $db->prepare($sql);
-        $stmt->execute($params);
-        return $stmt;
-    } catch (PDOException $e) {
-        error_log("Database query error: " . $e->getMessage());
-        return false;
-    }
+function dbQuery($collection, $filter = [], $operation = 'find', $data = null) {
+    return MongoDBHelper::find($collection, $filter);
 }
 
 /**
- * Get single row
+ * Get single document (MongoDB)
  */
-function dbFetchOne($sql, $params = []) {
-    $stmt = dbQuery($sql, $params);
-    if ($stmt) {
-        return $stmt->fetch();
-    }
-    return false;
+function dbFetchOne($collection, $filter = [], $options = []) {
+    return MongoDBHelper::findOne($collection, $filter, $options);
 }
 
 /**
- * Get all rows
+ * Get all documents (MongoDB)
  */
-function dbFetchAll($sql, $params = []) {
-    $stmt = dbQuery($sql, $params);
-    if ($stmt) {
-        return $stmt->fetchAll();
-    }
-    return [];
+function dbFetchAll($collection, $filter = [], $options = []) {
+    return MongoDBHelper::find($collection, $filter, $options);
 }
 
 /**
- * Insert and return last insert ID
+ * Insert document and return inserted ID (MongoDB)
  */
-function dbInsert($sql, $params = []) {
-    try {
-        $db = getDB();
-        if (!$db) {
-            return false;
-        }
-        
-        $stmt = $db->prepare($sql);
-        $stmt->execute($params);
-        return $db->lastInsertId();
-    } catch (PDOException $e) {
-        error_log("Database insert error: " . $e->getMessage());
-        return false;
-    }
+function dbInsert($collection, $document) {
+    return MongoDBHelper::insertOne($collection, $document);
 }
 
